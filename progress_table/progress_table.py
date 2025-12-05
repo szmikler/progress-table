@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from threading import Thread
 from typing import Any, TextIO
 
+import wcwidth
 from colorama import Style
 
 from progress_table import styles
@@ -129,34 +130,34 @@ class ProgressTable:
     DEFAULT_ROW_COLOR = None
 
     def __init__(
-        self,
-        *cols: str,
-        columns: Iterable[str] = (),
-        interactive: int = int(os.environ.get("PTABLE_INTERACTIVE", "2")),
-        refresh_rate: int = 20,
-        num_decimal_places: int = 4,
-        default_column_width: int | None = None,
-        default_column_color: ColorFormat = None,
-        default_column_alignment: str | None = None,
-        default_column_aggregate: str | None = None,
-        default_header_color: ColorFormat = None,
-        default_row_color: ColorFormat = None,
-        pbar_show_throughput: bool = True,
-        pbar_show_progress: bool = False,
-        pbar_show_percents: bool = False,
-        pbar_show_eta: bool = False,
-        pbar_embedded: bool = True,
-        pbar_style: str | styles.PbarStyleBase = "square",
-        pbar_style_embed: str | styles.PbarStyleBase = "cdots",
-        print_header_on_top: bool = True,
-        print_header_every_n_rows: int = 30,
-        custom_cell_format: Callable[[Any], str] | None = None,
-        table_style: str | styles.TableStyleBase = "round",
-        file: TextIO | list[TextIO] | tuple[TextIO] | None = None,
-        # DEPRECATED ARGUMENTS
-        custom_format: None = None,
-        embedded_progress_bar: None = None,
-        print_row_on_update: None = None,
+            self,
+            *cols: str,
+            columns: Iterable[str] = (),
+            interactive: int = int(os.environ.get("PTABLE_INTERACTIVE", "2")),
+            refresh_rate: int = 20,
+            num_decimal_places: int = 4,
+            default_column_width: int | None = None,
+            default_column_color: ColorFormat = None,
+            default_column_alignment: str | None = None,
+            default_column_aggregate: str | None = None,
+            default_header_color: ColorFormat = None,
+            default_row_color: ColorFormat = None,
+            pbar_show_throughput: bool = True,
+            pbar_show_progress: bool = False,
+            pbar_show_percents: bool = False,
+            pbar_show_eta: bool = False,
+            pbar_embedded: bool = True,
+            pbar_style: str | styles.PbarStyleBase = "square",
+            pbar_style_embed: str | styles.PbarStyleBase = "cdots",
+            print_header_on_top: bool = True,
+            print_header_every_n_rows: int = 30,
+            custom_cell_format: Callable[[Any], str] | None = None,
+            table_style: str | styles.TableStyleBase = "round",
+            file: TextIO | list[TextIO] | tuple[TextIO] | None = None,
+            # DEPRECATED ARGUMENTS
+            custom_format: None = None,
+            embedded_progress_bar: None = None,
+            print_row_on_update: None = None,
     ) -> None:
         """Progress Table instance.
 
@@ -305,13 +306,13 @@ class ProgressTable:
     ####################
 
     def add_column(
-        self,
-        name: str,
-        *,
-        width: int | None = None,
-        color: ColorFormat = None,
-        alignment: str | None = None,
-        aggregate: None | str | Callable = None,
+            self,
+            name: str,
+            *,
+            width: int | None = None,
+            color: ColorFormat = None,
+            alignment: str | None = None,
+            aggregate: None | str | Callable = None,
     ) -> None:
         """Add column to the table.
 
@@ -391,14 +392,14 @@ class ProgressTable:
         self._set_all_display_rows_as_pending()
 
     def update(
-        self,
-        name: str,
-        value: Any,
-        *,
-        row: int = -1,
-        weight: float = 1.0,
-        cell_color: ColorFormat = None,
-        **column_kwds,
+            self,
+            name: str,
+            value: Any,
+            *,
+            row: int = -1,
+            weight: float = 1.0,
+            cell_color: ColorFormat = None,
+            **column_kwds,
     ) -> None:
         """Update value in the current row. More powerful than __setitem__.
 
@@ -490,17 +491,17 @@ class ProgressTable:
         return self._at_indexer
 
     def next_row(
-        self,
-        color: ColorFormat | dict[str, ColorFormat] = None,
-        split: bool | None = None,
-        header: bool | None = None,
+            self,
+            color: ColorFormat | dict[str, ColorFormat] = None,
+            split: bool | None = None,
+            header: bool | None = None,
     ) -> None:
         """End the current row."""
         # Force header if it wasn't printed for a long enough time
         if (
-            header is None
-            and len(self._data_rows) - self._previous_header_row_number >= self._print_header_every_n_rows
-            and self._print_header_every_n_rows > 0
+                header is None
+                and len(self._data_rows) - self._previous_header_row_number >= self._print_header_every_n_rows
+                and self._print_header_every_n_rows > 0
         ):
             header = True
         header = header or False
@@ -833,31 +834,38 @@ class ProgressTable:
         return {col: self.column_colors[col] + color_colorama[col] for col in color}
 
     def _apply_cell_formatting(self, value: Any, column_name: str, color: str) -> str:
-        str_value = self.custom_cell_format(value)
         width = self.column_widths[column_name]
+        str_value = self.custom_cell_format(value)
         alignment = self.column_alignments[column_name]
 
+        real_width = 0
+        clipped = False
+        num_characters = len(str_value)
+        for idx, letter in enumerate(str_value):
+            ch_width = wcwidth.wcwidth(letter)
+            if real_width + ch_width > width:
+                num_characters = idx
+                clipped = True
+                break
+            real_width += ch_width
+
+        str_value = str_value[:num_characters]
+        num_characters += width - real_width
+
         if alignment == "center":
-            str_value = str_value.center(width)
+            str_value = str_value.center(num_characters)
         elif alignment == "left":
-            str_value = str_value.ljust(width)
+            str_value = str_value.ljust(num_characters)
         elif alignment == "right":
-            str_value = str_value.rjust(width)
+            str_value = str_value.rjust(num_characters)
         else:
             allowed_alignments = ["center", "left", "right"]
             msg = f"Alignment '{alignment}' not in {allowed_alignments}!"
             raise KeyError(msg)
 
-        clipped = len(str_value) > width
-        str_value = "".join(
-            [
-                " ",  # space at the beginning of the row
-                str_value[:width].center(width),
-                self.table_style.cell_overflow if clipped else " ",
-            ],
-        )
         reset = Style.RESET_ALL if color else ""
-        return f"{color}{str_value}{reset}"
+        maybe_overflow = self.table_style.cell_overflow if clipped else ' '
+        return f"{color} {str_value}{maybe_overflow}{reset}"
 
     def _get_outer_inner_width(self) -> int:
         return sum(self.column_widths.values()) + 3 * len(self.column_widths) + 1
@@ -952,21 +960,21 @@ class ProgressTable:
     ##################
 
     def pbar(
-        self,
-        iterable: Iterable | int,
-        *range_args,
-        position=None,
-        static=False,
-        total=None,
-        description="",
-        show_throughput: bool | None = None,
-        show_progress: bool | None = None,
-        show_percents: bool | None = None,
-        show_eta: bool | None = None,
-        style=None,
-        style_embed=None,
-        color=None,
-        color_empty=None,
+            self,
+            iterable: Iterable | int,
+            *range_args,
+            position=None,
+            static=False,
+            total=None,
+            description="",
+            show_throughput: bool | None = None,
+            show_progress: bool | None = None,
+            show_percents: bool | None = None,
+            show_eta: bool | None = None,
+            style=None,
+            style_embed=None,
+            color=None,
+            color_empty=None,
     ) -> TableProgressBar:
         """Create iterable progress bar object.
 
@@ -1033,22 +1041,22 @@ class ProgressTable:
 
 class TableProgressBar:
     def __init__(
-        self,
-        iterable,
-        *,
-        table,
-        total,
-        style,
-        style_embed,
-        color,
-        color_empty,
-        position,
-        static,
-        description,
-        show_throughput: bool,
-        show_progress: bool,
-        show_percents: bool,
-        show_eta: bool,
+            self,
+            iterable,
+            *,
+            table,
+            total,
+            style,
+            style_embed,
+            color,
+            color_empty,
+            position,
+            static,
+            description,
+            show_throughput: bool,
+            show_progress: bool,
+            show_percents: bool,
+            show_eta: bool,
     ) -> None:
         self.iterable: Iterable | None = iterable
 
@@ -1163,7 +1171,7 @@ class TableProgressBar:
         num_empty = inner_width - num_filled
 
         if embed_str is not None:
-            row_str = embed_str[1 + len(infobar) :]
+            row_str = embed_str[1 + len(infobar):]
 
             filled_part = row_str[:num_filled]
             if len(filled_part) > 0 and filled_part[-1] == " ":
