@@ -10,6 +10,7 @@ Lightweight utility to display the progress of your process as a pretty table in
 * Designed to monitor ML experiments, but works for any metrics-producing process
 * Allows you to see at a glance what's going on with your process
 * Increases readability and simplifies your command line logging
+* Is efficient: redraws only the modified rows
 
 ### Change this:
 
