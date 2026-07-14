@@ -148,7 +148,7 @@ class ProgressTable:
         pbar_show_eta: bool = False,
         pbar_embedded: bool = True,
         pbar_style: str | styles.PbarStyleBase = "square",
-        pbar_style_embed: str | styles.PbarStyleBase = "cdots",
+        pbar_style_embed: str | styles.PbarStyleBase = "dash",
         print_header_on_top: bool = True,
         print_header_every_n_rows: int = 30,
         custom_cell_format: Callable[[Any], str] | None = None,
