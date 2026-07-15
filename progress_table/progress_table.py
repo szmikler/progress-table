@@ -557,7 +557,7 @@ class ProgressTable:
         if not self._data_rows[-1].is_empty():
             self.next_row(**kwds)
 
-        for key, value in zip(self.column_names, values, strict=True):
+        for key, value in zip(self.column_names, values, strict=False):
             self.update(key, value)
 
         # The row was explicitly added, make sure it is displayed
