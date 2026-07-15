@@ -401,7 +401,7 @@ class ProgressTable:
             column_names: Names of the columns in the desired order.
 
         """
-        if all(x == y for x, y in zip(column_names, self.column_names)):
+        if all(x == y for x, y in zip(column_names, self.column_names, strict=True)):
             return
 
         assert isinstance(column_names, (list, tuple))
@@ -557,7 +557,7 @@ class ProgressTable:
         if not self._data_rows[-1].is_empty():
             self.next_row(**kwds)
 
-        for key, value in zip(self.column_names, values):
+        for key, value in zip(self.column_names, values, strict=True):
             self.update(key, value)
 
         # The row was explicitly added, make sure it is displayed

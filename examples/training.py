@@ -86,7 +86,11 @@ def main(random_seed=None, sleep_duration=SLEEP_DURATION, **overrides):
         X_batches = np.array_split(X_train, NUM_BATCHES)
         Y_batches = np.array_split(Y_train, NUM_BATCHES)
 
-        for batch in table(zip(X_batches, Y_batches), total=NUM_BATCHES, description="train epoch"):
+        for batch in table(
+            zip(X_batches, Y_batches, strict=True),
+            total=NUM_BATCHES,
+            description="train epoch",
+        ):
             x, y = batch
             logits = x @ weights
 
@@ -108,7 +112,11 @@ def main(random_seed=None, sleep_duration=SLEEP_DURATION, **overrides):
             X_batches = np.array_split(X_valid, NUM_BATCHES)
             Y_batches = np.array_split(Y_valid, NUM_BATCHES)
 
-            for batch in table(zip(X_batches, Y_batches), total=NUM_BATCHES, description="valid epoch"):
+            for batch in table(
+                zip(X_batches, Y_batches, strict=True),
+                total=NUM_BATCHES,
+                description="valid epoch",
+            ):
                 x, y = batch
                 logits = x @ weights
                 accuracy = np.mean(np.argmax(logits, axis=1) == y)
