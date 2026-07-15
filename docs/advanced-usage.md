@@ -2,12 +2,12 @@
 
 ## Indexing
 
-Progress Table with `interactive>=2` supports modyfing already closed rows (rows above the current row).
-This can be done either with `.update` method or using `.at` indexing which is a shorthand for `AtIndexer` object.
+Progress Table with `interactive>=2` supports modifying already closed rows (rows above the current row).
+This can be done either with the `.update` method or with `.at` indexing, which is shorthand for the `AtIndexer`
+object.
 
 
-> When using `interactive<2` mode, you can only modify the current row.
-> Any changes made to other rows will not be displayed.
+> With `interactive<2`, only the current row can be redrawn. Changes to other rows are stored but are not displayed.
 
 ### `.update` method
 
@@ -79,9 +79,10 @@ Which should give you the following:
 There are two types of progress bars in Progress Table: embedded and non-embedded.
 
 
-> When using `interactive=0` mode, the progress bars will not be displayed.
+> With `interactive=0`, live redraws are disabled, rows are printed when finalized, and progress bars are not
+> displayed.
 
-> When using `interactive=1` mode, progress bars are be displayed only in the bottom row.
+> With `interactive=1`, only the current line can be redrawn, so only one progress-bar position is visible.
 
 ### Embedded progress bars
 

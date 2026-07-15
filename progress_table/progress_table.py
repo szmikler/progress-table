@@ -25,6 +25,8 @@ from progress_table.common import (
     CURSOR_UP,
     ColorFormat,
     ColorFormatTuple,
+    is_interactive_terminal,
+    is_ipython_kernel,
     maybe_convert_to_colorama,
 )
 
@@ -133,7 +135,7 @@ class ProgressTable:
         self,
         *cols: str,
         columns: Iterable[str] = (),
-        interactive: int = int(os.environ.get("PTABLE_INTERACTIVE", "2")),
+        interactive: int | None = None,
         refresh_rate: int = 20,
         num_decimal_places: int = 4,
         default_column_width: int | None = None,
@@ -177,15 +179,16 @@ class ProgressTable:
                   settings like alignment, color and width, while columns added through methods can have those
                   customized.
             columns: Alias for `cols`.
-            interactive: Three interactivity levels are available: 2, 1 and 0. It's recommended to use 2, but some
-                         terminal environments might not all features. When using decreased interactivity, some features
-                         will be supressed. If something doesn't look right in your terminal, try to decrease the
-                         interactivity.
-                         On level 2 you can modify all rows, including the rows above the current one.
-                         You can also add columns on-the-fly or reorder them. You can use nested progress bars.
-                         On level 1 you can only operate on the current row, the old rows are frozen, but you still get
-                         to use a progress bar, albeit not nested. On level 0 there are no progress bars and rows are
-                         only printed after calling `next_row`.
+            interactive: Three interactivity levels are available: 2, 1 and 0. Level 2 is recommended, but some
+                         environments do not support all of its features. If the output does not look right, try a
+                         lower level. When omitted, this defaults to level 1 in Jupyter, level 0 when output is
+                         redirected, and level 2 in an interactive terminal. The `PTABLE_INTERACTIVE` environment
+                         variable can override this automatic default.
+                         Level 2 supports redrawing any displayed row, adding or reordering columns on the fly, and
+                         nested progress bars. Level 1 redraws only the current line; changes to previous rows are
+                         stored but not displayed, and only one progress-bar position is visible. Level 0 disables
+                         live redraws and progress bars; rows are displayed when finalized with methods such as
+                         `next_row` or `add_row`.
             refresh_rate: The maximal number of times per second to render the updates in the table.
             num_decimal_places: This is only applicable when using the default formatting. This won't be used if
                                 `custom_cell_repr` is set. If applicable, for every displayed value except integers
@@ -292,7 +295,26 @@ class ProgressTable:
         self._CURSOR_ROW = 0
 
         # Interactivity settings
-        self.interactive = interactive
+        auto_detected: bool = False
+
+        if interactive is not None:
+            self.interactive = interactive
+        elif "PTABLE_INTERACTIVE" in os.environ:
+            self.interactive = int(os.environ.get("PTABLE_INTERACTIVE", ""))
+        elif is_ipython_kernel():
+            auto_detected = True
+            self.interactive = 1
+        elif not all(is_interactive_terminal(stream) for stream in self.files):
+            auto_detected = True
+            self.interactive = 0
+        else:
+            self.interactive = 2
+
+        if auto_detected:
+            logger.warning(
+                f"Automatically deduced `interactive` as {self.interactive} for compatibility."
+                " Set `interactive` explicitly to hide the warning."
+            )
         assert self.interactive in (2, 1, 0)
 
         self._printing_buffer: list[str] = []
@@ -413,6 +435,10 @@ class ProgressTable:
                          If column already exists, they will have no effect.
 
         """
+        if self._closed:
+            msg = "Table was closed! Updating closed tables is not supported."
+            raise TableClosedError(msg)
+
         if name not in self.column_names:
             self.add_column(name, **column_kwds)
 
@@ -1290,19 +1316,22 @@ class TableAtIndexer:
             self.edit_mode_prefix_map.update({word[:i].lower(): word for i in range(1, len(word) + 1)})
             self.edit_mode_prefix_map.update({word[:i].upper(): word for i in range(1, len(word) + 1)})
 
-    def _parse_index(self, key: slice | tuple) -> tuple:
+    def _parse_index(self, key: slice | tuple) -> tuple[list[int], list[str], str]:
+        rows: slice | int
+        cols: slice | int
+        mode: str
         if isinstance(key, slice):
-            rows: slice | int = key
-            cols: slice | int = slice(None)
-            mode: str = "values"
+            rows = key
+            cols = slice(None)
+            mode = "values"
         elif len(key) == 2:
-            rows: slice | int = key[0]
-            cols: slice | int = key[1]
-            mode: str = "values"
+            rows = key[0]
+            cols = key[1]
+            mode = "values"
         elif len(key) >= 3:
-            rows: slice | int = key[0]
-            cols: slice | int = key[1]
-            mode: str = key[2]
+            rows = key[0]
+            cols = key[1]
+            mode = key[2]
             assert mode in self.edit_mode_prefix_map, f"Unknown mode `{mode}`. Available: values, weights, colors"
             mode = self.edit_mode_prefix_map[mode]
         else:

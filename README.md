@@ -88,15 +88,15 @@ Go to [advanced usage](docs/advanced-usage.md) page for more information.
 
 ## Troubleshooting
 
-### Exceesive output
+### Excessive output
 
 Progress Table works correctly in most consoles, but there are some exceptions:
 
-* Some cloud logging consoles (e.g. kubernetes) don't support `\r` properly. You can still use ProgressTable, but with `interactive=0` option. This mode will not display progress bars.
+* Some cloud logging consoles (e.g. Kubernetes) do not handle live, carriage-return-based redraws properly. You can still use ProgressTable with `interactive=0`. This mode prints rows when they are finalized and does not display progress bars.
 
-* Some consoles like 'PyCharm Python Console' or 'IDLE' don't support cursor movement. You can still use ProgressTable, but with `interactive=1` option. In this mode, you can display only a single progress bar.
+* Some consoles, such as the PyCharm Python Console or IDLE, do not support moving the cursor to previous lines. You can still use ProgressTable with `interactive=1`. This mode can redraw the current line and display one progress-bar position, but previous rows remain visually frozen.
 
-> By default `interactive=2`. You can change the default 'interactive' with an argument when creating the table object or by setting 'PTABLE_INTERACTIVE' environment variable, e.g. `PTABLE_INTERACTIVE=1`.
+> When `interactive` is omitted, it defaults to `1` in Jupyter, `0` when output is redirected, and `2` in an interactive terminal. Set it explicitly when creating the table, or override the automatic default with the `PTABLE_INTERACTIVE` environment variable, for example `PTABLE_INTERACTIVE=1`.
 
 ### Other problems
 

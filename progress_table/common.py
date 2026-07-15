@@ -3,7 +3,9 @@
 
 """Common utilities for progress_table."""
 
-from typing import Union
+import os
+import sys
+from typing import Optional, TextIO, Union
 
 from colorama import Back, Fore, Style
 
@@ -49,3 +51,26 @@ def maybe_convert_to_colorama(color: ColorFormat) -> str:
         color = color.split(" ")
     results = [maybe_convert_to_colorama_str(x) for x in color]
     return "".join(results)
+
+
+def is_ipython_kernel() -> bool:
+    try:
+        from IPython.core.getipython import get_ipython
+
+        ipython = get_ipython()
+        if ipython is not None:
+            return "IPKernelApp" in ipython.config
+        return False
+    except ImportError:
+        return False
+
+
+def is_interactive_terminal(stream: Optional[TextIO] = None) -> bool:
+    """Check whether a stream supports interactive terminal output."""
+    if stream is None:
+        stream = sys.stdout
+        assert stream is not None
+    try:
+        return stream.isatty() and os.environ.get("TERM") != "dumb"
+    except (AttributeError, OSError, ValueError):
+        return False
