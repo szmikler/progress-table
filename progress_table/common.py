@@ -55,7 +55,7 @@ def maybe_convert_to_colorama(color: ColorFormat) -> str:
 
 def is_ipython_kernel() -> bool:
     try:
-        from IPython.core.getipython import get_ipython
+        from IPython.core.getipython import get_ipython  # pyright: ignore[reportMissingImports]
 
         ipython = get_ipython()
         if ipython is not None:
