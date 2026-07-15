@@ -312,8 +312,8 @@ class ProgressTable:
 
         if auto_detected:
             logger.warning(
-                f"Automatically deduced `interactive` as {self.interactive} for compatibility."
-                " Set `interactive` explicitly to hide the warning."
+                f"Automatically set `interactive` to {self.interactive} for compatibility."
+                " Set `interactive` explicitly to hide this warning."
             )
         assert self.interactive in (2, 1, 0)
 
