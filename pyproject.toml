@@ -24,8 +24,8 @@ classifiers = [
 readme = "README_pypi.md"
 
 [project.urls]
-Home = "https://github.com/gahaalt/progress-table"
-Documentation = "https://github.com/sjmikler/progress-table/blob/main/docs"
+Home = "https://github.com/szmikler/progress-table"
+Documentation = "https://github.com/szmikler/progress-table/blob/main/docs"
 
 [project.optional-dependencies]
 dev = ["ruff", "pyright", "pytest", "pytest-cov", "hatch", "twine"]

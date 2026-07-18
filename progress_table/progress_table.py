@@ -358,9 +358,13 @@ class ProgressTable:
         else:
             self.column_names.append(name)
 
-        resolved_width = width or self.column_width or self.DEFAULT_COLUMN_WIDTH
-        if not width and resolved_width < len(str(name)):
-            resolved_width = len(str(name))
+        if width is not None:
+            resolved_width = width
+        elif self.column_width is not None:
+            resolved_width = self.column_width
+        else:
+            resolved_width = self.DEFAULT_COLUMN_WIDTH
+        resolved_width = max(resolved_width, len(name))
         self.column_widths[name] = resolved_width
         self.column_colors[name] = maybe_convert_to_colorama(color or self.column_color or self.DEFAULT_COLUMN_COLOR)
         self.column_alignments[name] = alignment or self.column_alignment or self.DEFAULT_COLUMN_ALIGNMENT

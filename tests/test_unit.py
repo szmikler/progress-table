@@ -37,6 +37,22 @@ def test_explicit_interactivity_precedes_automatic_detection(monkeypatch):
     assert ProgressTable(file=StringIO()).interactive == 1
 
 
+def test_column_width_zero_uses_header_width():
+    table = ProgressTable()
+
+    table.add_column("header", width=0)
+
+    assert table.column_widths["header"] == len("header")
+
+
+def test_column_width_cannot_truncate_header():
+    table = ProgressTable()
+
+    table.add_column("long header", width=2)
+
+    assert table.column_widths["long header"] == len("long header")
+
+
 def test_aggregate_mean():
     table = ProgressTable()
     table.add_column("value", aggregate="mean")

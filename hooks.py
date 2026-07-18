@@ -15,10 +15,10 @@ from hatchling.metadata.plugin.interface import MetadataHookInterface
 
 
 def with_direct_github_urls(text):
-    images_github_link = "https://raw.githubusercontent.com/sjmikler/progress-table/main/images"
+    images_github_link = "https://raw.githubusercontent.com/szmikler/progress-table/main/images"
     text = text.replace("(images", "(" + images_github_link)
 
-    docs_github_link = "https://github.com/sjmikler/progress-table/blob/main/docs/"
+    docs_github_link = "https://github.com/szmikler/progress-table/blob/main/docs/"
     return text.replace("(docs", "(" + docs_github_link)
 
 
