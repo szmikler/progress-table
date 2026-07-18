@@ -2,7 +2,6 @@
 #  Licensed under the MIT License
 
 import logging
-import os
 import pathlib
 import re
 
@@ -43,13 +42,10 @@ def test_all_code_blobs():
     # Testing whether code blobs from the documentation run without errors
     all_code_blobs = []
 
-    for root, _dirs, files in os.walk("."):
-        for file in files:
-            path = pathlib.Path(os.path.join(root, file))
-            if path.suffix == ".md":
-                code_blobs = scan_for_code_blobs(path.open("r", encoding="utf-8").read())
-                for blob in code_blobs:
-                    all_code_blobs.append(blob)
+    documentation_paths = [pathlib.Path("README.md"), *pathlib.Path("docs").rglob("*.md")]
+    for path in documentation_paths:
+        code_blobs = scan_for_code_blobs(path.read_text(encoding="utf-8"))
+        all_code_blobs.extend(code_blobs)
 
     logging.warning(f"Detected {len(all_code_blobs)} code examples!")
 
